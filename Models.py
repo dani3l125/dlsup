@@ -3,6 +3,12 @@ import torchvision.models as models
 import torch.nn as nn
 import torch.nn.functional as F
 
+supres_dict = {
+    '480x640': (720, 1280),
+    '720x1280': (1280, 1920),
+    '1280x1920': (2160, 2840)
+}
+
 def get_backbone(name, pretrained=True):
 
     """ Loading backbone, defining names for skip-connections and encoder output. """
@@ -172,17 +178,28 @@ class Unet(nn.Module):
     def forward(self, *input):
 
         """ Forward propagation in U-Net. """
+        res_key = f'{input[0].shape[2]}x{input[0].shape[3]}'
 
         x, features = self.forward_backbone(*input)
 
         for skip_name, upsample_block in zip(self.shortcut_features[::-1], self.upsample_blocks):
             skip_features = features[skip_name]
             #TODO
-            x = upsample_block(F.interpolate(x,size=
-            (x.shape[0], x.shape[1], skip_features.shape[2], skip_features.shape[3])), skip_features)
+            if not skip_features is None:
+                x = upsample_block(x, F.interpolate(skip_features, size=
+                (x.shape[2] * 2, x.shape[3] * 2)))
+            else:
+                x = upsample_block(x, skip_features)
 
         x = self.final_upsample(x)
         x = self.final_conv(x)
+
+        # if self.training:
+        #     return x
+
+        if res_key in supres_dict.keys():
+            x = F.interpolate(x, size=supres_dict[res_key])
+
         return x
 
     def forward_backbone(self, x):
@@ -236,5 +253,5 @@ if __name__ == "__main__":
 
     # simple test run
     net = Unet(backbone_name='resnet34' )
-    im = torch.rand((1, 3, 720, 1080))
+    im = torch.rand((1, 3, 720, 1280))
     print(f'Output size: {net(im).shape}')
