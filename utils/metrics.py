@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torchvision.models import vgg16, VGG16_Weights
 
-device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 LOSS_HYPERPARAMETERS = {'features_loss': {'weight': 1,
                                           'j': [10]
