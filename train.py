@@ -2,7 +2,7 @@ import torch
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from utils.Data import DIV2KDataset, plot_data_grid
-from utils.metrics import compute_accuracy, get_loss_function
+from utils.metrics import compute_accuracy, compute_loss
 from torchvision import transforms
 from Models import Unet
 from torch.utils.data import DataLoader
@@ -46,7 +46,6 @@ def plot_curve_error(train_mean, train_std, test_mean, test_std, x_label, y_labe
 
 def train(model, visualize_data=False):
 
-    loss_criterion = get_loss_function()
     optimizer = Adam(model.parameters(), lr=DEFAULT_LR)
     lr_scheduler = ReduceLROnPlateau(optimizer)
     transform = transforms.Compose([
@@ -93,7 +92,7 @@ def train(model, visualize_data=False):
             prediction = model(im)
 
             # loss - modeified according to psnr function
-            loss = loss_criterion(prediction, target)
+            loss = compute_loss(prediction, target)
 
             # accuracy
             psnr, ssim = compute_accuracy(prediction, target)
@@ -105,6 +104,7 @@ def train(model, visualize_data=False):
             loss_epoch.append(loss.item())
             psnr_epoch.append(psnr)
             ssim_epoch.append(ssim)
+            print(f'batch:{index_batch} | loss:{loss} | psnr:{psnr} | ssim:{ssim}')
 
         loss_mean_epoch = np.mean(loss_epoch)
         loss_std_epoch = np.std(loss_epoch)
@@ -136,7 +136,7 @@ def train(model, visualize_data=False):
             prediction = model(im)
 
             # loss - modeified according to psnr function
-            loss = loss_criterion(prediction, target)
+            loss = compute_loss(prediction, target)
 
             # accuracy
             psnr, ssim = compute_accuracy(prediction, target)

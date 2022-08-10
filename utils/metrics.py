@@ -5,8 +5,17 @@ import torch
 import torch.nn as nn
 from torchvision.models import vgg16, VGG16_Weights
 
-DEFAULT_J = 13
-DEFAULT_WEIGHTS = [1, 1, 1]
+device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+
+LOSS_HYPERPARAMETERS = {'features_loss': {'weight': 1,
+                                          'j': [10]
+                                          },
+                        'pixel_loss': {'weight': 1,
+                                       },
+                        'style_loss': {'weight': 1,
+                                       'j_list': [4, 8, 12]
+                                       }
+                        }
 
 
 def initialize_loss():
@@ -14,7 +23,7 @@ def initialize_loss():
     Initialize the loss variables
     :return: The VGG model, the activation dictionary, the initialized loss
     """
-    vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1).eval()
+    vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1).eval().to(device)
 
     activation_indices = []
     for i, layer in enumerate(vgg.features):
@@ -34,8 +43,7 @@ def initialize_loss():
 
     return vgg, activation, nn.MSELoss(reduction='sum')
 
-
-vgg, activations, loss = initialize_loss()  # initialize the vgg
+VGG, ACTIVATION, LOSS = initialize_loss()  # initialize the vgg
 
 
 def get_activation(output, label, vgg, activation, j):
@@ -88,6 +96,29 @@ def pixel_loss(output, label, loss):
     return loss(output, label) / torch.prod(torch.tensor(output.shape[1:]))
 
 
+def compute_loss(output, label, hyper_parameters=LOSS_HYPERPARAMETERS):
+    loss = hyper_parameters['pixel_loss']['weight'] * pixel_loss(output, label, LOSS)
+    features_phi_output, features_phi_label = get_activation(output,
+                                                             label,
+                                                             VGG,
+                                                             ACTIVATION,
+                                                             hyper_parameters['features_loss']['j'])
+    loss += hyper_parameters['features_loss']['weight'] * features_loss(features_phi_output,
+                                                                        features_phi_label,
+                                                                        LOSS)
+    for j in hyper_parameters['style_loss']['j_list']:
+        style_phi_output, style_phi_label = get_activation(output,
+                                                           label,
+                                                           VGG,
+                                                           ACTIVATION,
+                                                           j)
+        loss += hyper_parameters['style_loss']['weight'] / len(hyper_parameters['style_loss']['j_list']) * style_loss(
+            style_phi_output,
+            style_phi_output,
+            LOSS)
+    return loss
+
+
 def compute_accuracy(prediction, label):
     # # ssim
 
@@ -104,7 +135,7 @@ def compute_accuracy(prediction, label):
     targets = label.squeeze().detach().cpu().numpy()
     ssims = np.zeros(preds.shape[0])
     for i in range(preds.shape[0]):
-        ssims[i] = structural_similarity(preds[i], targets[i], data_range=1)
+        ssims[i] = structural_similarity(preds[i], targets[i], data_range=1, channel_axis=0)
 
     ssim = ssims.mean()
 
@@ -122,6 +153,3 @@ def compute_accuracy(prediction, label):
     psnr = psnr.item()
 
     return psnr, ssim
-
-def get_loss(output, label, j = DEFAULT_J, weights=DEFAULT_WEIGHTS):
-    return MSELoss()
