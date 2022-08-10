@@ -10,11 +10,12 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
+DIV2K_PATH = '/data'
 DEFAULT_LR = 0.001
-DEFAULT_BS = 128
+DEFAULT_BS = 1
 EPOCHS = 100
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
 
 # plot train and test metric along epochs
@@ -46,18 +47,23 @@ def plot_curve_error(train_mean, train_std, test_mean, test_std, x_label, y_labe
 def train(model, visualize_data=False):
 
     loss_criterion = get_loss_function()
-    optimizer = Adam(model, lr=DEFAULT_LR)
+    optimizer = Adam(model.parameters(), lr=DEFAULT_LR)
     lr_scheduler = ReduceLROnPlateau(optimizer)
-    transform = transforms.Compose(
+    transform = transforms.Compose([
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-    )
-    train_ds = DIV2KDataset(transform=transform)
-    val_ds = DIV2KDataset(type='valid')
-    test_ds = DIV2KDataset(type='test')
+        #transforms.Resize(1020)
+    ])
+    target_transform = transforms.Compose([
+        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+        #transforms.Resize(2040)
+    ])
+    train_ds = DIV2KDataset(dir=DIV2K_PATH, transform=transform, target_transform=target_transform)
+    val_ds = DIV2KDataset(dir=DIV2K_PATH, type='valid', transform=transform, target_transform=target_transform)
+    test_ds = DIV2KDataset(dir=DIV2K_PATH, type='test', transform=transform, target_transform=target_transform)
 
-    train_dl = DataLoader(train_ds, batch_size=DEFAULT_BS, num_workers=5)
-    val_dl = DataLoader(val_ds, batch_size=DEFAULT_BS, num_workers=5)
-    test_dl = DataLoader(test_ds, batch_size=DEFAULT_BS, num_workers=5)
+    train_dl = DataLoader(train_ds, batch_size=DEFAULT_BS, num_workers=4, pin_memory=True)
+    val_dl = DataLoader(val_ds, batch_size=DEFAULT_BS, num_workers=4, pin_memory=True)
+    test_dl = DataLoader(test_ds, batch_size=DEFAULT_BS, num_workers=4, pin_memory=True)
 
     loss_mean_train = np.zeros(EPOCHS)
     loss_std_train = np.zeros(EPOCHS)
@@ -80,18 +86,17 @@ def train(model, visualize_data=False):
 
         model.train()
 
-        for index_batch, (im, target) in enumerate(train_ds):
+        for index_batch, (im, target) in enumerate(train_dl):
             im = im.to(device)
             target = target.to(device)
-
             # prediction
-            prediction = model(target)
+            prediction = model(im)
 
             # loss - modeified according to psnr function
-            loss = loss_criterion(prediction, im)
+            loss = loss_criterion(prediction, target)
 
             # accuracy
-            psnr, ssim = compute_accuracy(prediction, im)
+            psnr, ssim = compute_accuracy(prediction, target)
 
             optimizer.zero_grad()
             loss.backward()
@@ -127,15 +132,14 @@ def train(model, visualize_data=False):
 
             im = im.to(device)
             target = target.to(device)
-
             # prediction
-            prediction = model(target)
+            prediction = model(im)
 
-            # loss
-            loss = loss_criterion(prediction, im)
+            # loss - modeified according to psnr function
+            loss = loss_criterion(prediction, target)
 
             # accuracy
-            psnr, ssim = compute_accuracy(prediction, im)
+            psnr, ssim = compute_accuracy(prediction, target)
 
             if return_input:
                 # input accuracy
@@ -180,6 +184,7 @@ def train(model, visualize_data=False):
         # training
         # ================================================================================
         (loss_train, psnr_train, ssim_train) = train_epoch()
+        print(f'Train Epoch: {i} | Loss: {loss_train} | PSNR: {psnr_train} | SSIM: {ssim_train}')
 
         loss_mean_train[i] = loss_train['mean']
         loss_std_train[i] = loss_train['std']
@@ -192,6 +197,7 @@ def train(model, visualize_data=False):
         # testing (validation)
         # ================================================================================
         (loss_test, psnr_test, ssim_test) = valid_epoch(i)
+        print(f'Validation Epoch: {i} | Loss: {loss_test} | PSNR: {psnr_test} | SSIM: {ssim_test}')
 
         loss_mean_val[i] = loss_test['mean']
         loss_std_val[i] = loss_test['std']
@@ -258,5 +264,5 @@ def train(model, visualize_data=False):
 
 
 if __name__ == '__main__':
-    model = Unet()
+    model = Unet().to(device)
     train(model)

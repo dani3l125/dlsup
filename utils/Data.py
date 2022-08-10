@@ -1,4 +1,5 @@
 import os
+import torch
 from torchvision.io import read_image
 from torch.utils.data import Dataset
 import matplotlib.pyplot as plt
@@ -14,15 +15,20 @@ class DIV2KDataset(Dataset):
         return len([name for name in os.listdir(self.target_dir) if os.path.isfile(os.path.join(self.target_dir, name))])
 
     def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, f'{str(idx).zfill(4)}x2.png')
-        target_path = os.path.join(self.target_dir, f'{str(idx).zfill(4)}.png')
-        image = read_image(img_path)
-        target = read_image(target_path)
+        img_path = os.path.join(self.img_dir, f'{str(idx+1).zfill(4)}x2.png')
+        target_path = os.path.join(self.target_dir, f'{str(idx+1).zfill(4)}.png')
+        image = read_image(img_path).type(torch.float32)
+        target = read_image(target_path).type(torch.float32)
         if self.transform:
             image = self.transform(image)
         if self.target_transform:
             target = self.target_transform(target)
-        return image, target
+        final_image = torch.zeros((3, 1020, 1020))
+        final_target = torch.zeros((3, 2040, 2040))
+        # Handling inconsistency of images size by zero padding
+        final_image[:, :image.shape[1], :image.shape[2]] = image
+        final_target[:, :target.shape[1], :target.shape[2]] = target
+        return final_image, final_target
 
 
 # visualize a sample of the data
