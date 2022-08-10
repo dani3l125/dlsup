@@ -58,11 +58,11 @@ def train(model, visualize_data=False):
     ])
     train_ds = DIV2KDataset(dir=DIV2K_PATH, transform=transform, target_transform=target_transform)
     val_ds = DIV2KDataset(dir=DIV2K_PATH, type='valid', transform=transform, target_transform=target_transform)
-    test_ds = DIV2KDataset(dir=DIV2K_PATH, type='test', transform=transform, target_transform=target_transform)
+    # test_ds = DIV2KDataset(dir=DIV2K_PATH, type='test', transform=transform, target_transform=target_transform)
 
     train_dl = DataLoader(train_ds, batch_size=DEFAULT_BS, num_workers=4, pin_memory=True)
     val_dl = DataLoader(val_ds, batch_size=DEFAULT_BS, num_workers=4, pin_memory=True)
-    test_dl = DataLoader(test_ds, batch_size=DEFAULT_BS, num_workers=4, pin_memory=True)
+    # test_dl = DataLoader(test_ds, batch_size=DEFAULT_BS, num_workers=4, pin_memory=True)
 
     loss_mean_train = np.zeros(EPOCHS)
     loss_std_train = np.zeros(EPOCHS)
@@ -126,7 +126,8 @@ def train(model, visualize_data=False):
         ssim_epoch = []
 
         model.eval()
-        dataloader = val_dl if not test else test_dl
+        dataloader = val_dl
+        # dataloader = val_dl if not test else test_dl
 
         for index_batch, (im, target) in enumerate(dataloader):
 
