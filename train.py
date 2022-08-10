@@ -10,7 +10,7 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-DIV2K_PATH = '/data'
+DIV2K_PATH = '.'
 DEFAULT_LR = 0.001
 DEFAULT_BS = 1
 EPOCHS = 100
