@@ -13,7 +13,7 @@ LOSS_HYPERPARAMETERS = {'features_loss': {'weight': 1,
                         'pixel_loss': {'weight': 1,
                                        },
                         'style_loss': {'weight': 1,
-                                       'j_list': [4, 8, 12]
+                                       'j_list': (4, 8, 12)
                                        }
                         }
 
