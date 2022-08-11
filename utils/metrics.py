@@ -17,7 +17,8 @@ LOSS_HYPERPARAMETERS = {'features_loss': {'weight': 1,
                                        }
                         }
 
-from_file = True
+from_file = False
+MODEL_PATH = '/users/pilot/tester5/Daniel/dlsup/utils/vgg.pth'
 
 def initialize_loss():
     """
@@ -26,10 +27,11 @@ def initialize_loss():
     """
     if from_file:
         vgg = vgg16().eval().to(device)
-        vgg.load_state_dict(torch.load('vgg.pth'))
+        vgg.load_state_dict(torch.load(MODEL_PATH))
     else:
         from torchvision.models import VGG16_Weights
         vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1).eval().to(device)
+        torch.save(vgg.state_dict(), '/home/daniel/vgg.pth')
 
     activation_indices = []
     for i, layer in enumerate(vgg.features):
@@ -50,7 +52,6 @@ def initialize_loss():
     return vgg, activation, nn.MSELoss(reduction='sum')
 
 VGG, ACTIVATION, LOSS = initialize_loss()  # initialize the vgg
-print('t~')
 
 def get_activation(output, label, vgg, activation, j):
     """
@@ -159,3 +160,6 @@ def compute_accuracy(prediction, label):
     psnr = psnr.item()
 
     return psnr, ssim
+
+if __name__ == '__main__':
+        print('saved')
