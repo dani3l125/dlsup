@@ -3,7 +3,7 @@ from skimage.metrics import structural_similarity
 from torch.nn import MSELoss
 import torch
 import torch.nn as nn
-from torchvision.models import vgg16, VGG16_Weights
+from torchvision.models import vgg16
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -17,13 +17,19 @@ LOSS_HYPERPARAMETERS = {'features_loss': {'weight': 1,
                                        }
                         }
 
+from_file = True
 
 def initialize_loss():
     """
     Initialize the loss variables
     :return: The VGG model, the activation dictionary, the initialized loss
     """
-    vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1).eval().to(device)
+    if from_file:
+        vgg = vgg16().eval().to(device)
+        vgg.load_state_dict(torch.load('vgg.pth'))
+    else:
+        from torchvision.models import VGG16_Weights
+        vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1).eval().to(device)
 
     activation_indices = []
     for i, layer in enumerate(vgg.features):
@@ -44,7 +50,7 @@ def initialize_loss():
     return vgg, activation, nn.MSELoss(reduction='sum')
 
 VGG, ACTIVATION, LOSS = initialize_loss()  # initialize the vgg
-
+print('t~')
 
 def get_activation(output, label, vgg, activation, j):
     """
