@@ -8,12 +8,12 @@ from torchvision.models import vgg16
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 LOSS_HYPERPARAMETERS = {'features_loss': {'weight': 1,
-                                          'j': [10]
+                                          'j': 10
                                           },
                         'pixel_loss': {'weight': 1,
                                        },
                         'style_loss': {'weight': 1,
-                                       'j_list': (4, 8, 12)
+                                       'j_list': [4, 8, 12]
                                        }
                         }
 
