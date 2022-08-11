@@ -113,7 +113,8 @@ def compute_loss(output, label, hyper_parameters=LOSS_HYPERPARAMETERS):
     loss += hyper_parameters['features_loss']['weight'] * features_loss(features_phi_output,
                                                                         features_phi_label,
                                                                         LOSS)
-    for j in hyper_parameters['style_loss']['j_list']:
+    j_list = hyper_parameters['style_loss']['j_list']
+    for j in j_list:
         style_phi_output, style_phi_label = get_activation(output,
                                                            label,
                                                            VGG,
