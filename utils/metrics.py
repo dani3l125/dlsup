@@ -17,7 +17,7 @@ LOSS_HYPERPARAMETERS = {'features_loss': {'weight': 1,
                                        }
                         }
 
-from_file = False
+from_file = True
 MODEL_PATH = '/users/pilot/tester5/Daniel/dlsup/utils/vgg.pth'
 
 def initialize_loss():
