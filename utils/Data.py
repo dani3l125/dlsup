@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 class DIV2KDataset(Dataset):
     def __init__(self, dir='.', type='train' , transform=None, target_transform=None):
+        self.type = type
         self.target_dir = os.path.join(dir, f'DIV2K/DIV2K_{type}_HR')
         self.img_dir = os.path.join(dir, f'DIV2K/DIV2K_{type}_LR_bicubic/X2')
         self.transform = transform
@@ -15,8 +16,9 @@ class DIV2KDataset(Dataset):
         return len([name for name in os.listdir(self.target_dir) if os.path.isfile(os.path.join(self.target_dir, name))])
 
     def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, f'{str(idx+1).zfill(4)}x2.png')
-        target_path = os.path.join(self.target_dir, f'{str(idx+1).zfill(4)}.png')
+        real_idx = idx + 801 if self.type == 'valid' else idx + 1
+        img_path = os.path.join(self.img_dir, f'{str(real_idx).zfill(4)}x2.png')
+        target_path = os.path.join(self.target_dir, f'{str(real_idx).zfill(4)}.png')
         image = read_image(img_path).type(torch.float32)
         target = read_image(target_path).type(torch.float32)
         if self.transform:
