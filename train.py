@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 DIV2K_PATH = '.'
 DEFAULT_LR = 0.001
-DEFAULT_BS = 2
+DEFAULT_BS = 4
 EPOCHS = 100
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
