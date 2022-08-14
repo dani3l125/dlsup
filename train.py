@@ -22,7 +22,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 def plot_curve_error(train_mean, train_std, test_mean, test_std, x_label, y_label, title, identity=[]):
     plt.figure(figsize=(10, 8))
     plt.title(title)
-    plt.savefig(f'{title}.png')
 
     alpha = 0.1
 
@@ -42,7 +41,7 @@ def plot_curve_error(train_mean, train_std, test_mean, test_std, x_label, y_labe
     plt.legend()
 
     plt.tight_layout()
-    plt.show()
+    plt.savefig(f'{title}.png')
 
 def train(model, visualize_data=False):
 
@@ -158,7 +157,8 @@ def train(model, visualize_data=False):
         ssim_mean_epoch = np.mean(ssim_epoch)
         ssim_std_epoch = np.std(ssim_epoch)
 
-        lr_scheduler.step(loss.item())
+        if epoch_i > 10:
+            lr_scheduler.step(loss.item())
 
         loss = {'mean': loss_mean_epoch, 'std': loss_std_epoch}
         psnr = {'mean': psnr_mean_epoch, 'std': psnr_std_epoch}
@@ -234,7 +234,7 @@ def train(model, visualize_data=False):
         originals_test_list = []
         blurry_test_list = []
         for idx in index_data:
-            originals_test, blurry_test = test_ds[idx]
+            originals_test, blurry_test = val_ds[idx]
             originals_test = originals_test[0]
             blurry_test = blurry_test[0]
             originals_test_list.append(originals_test)
