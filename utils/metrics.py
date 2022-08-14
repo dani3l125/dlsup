@@ -3,12 +3,12 @@ from skimage.metrics import structural_similarity
 from torch.nn import MSELoss
 import torch
 import torch.nn as nn
-from torchvision.models import vgg16, VGG16_Weights
+from torchvision.models import vgg16
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 LOSS_HYPERPARAMETERS = {'features_loss': {'weight': 1,
-                                          'j': [10]
+                                          'j': 10
                                           },
                         'pixel_loss': {'weight': 1,
                                        },
@@ -17,13 +17,21 @@ LOSS_HYPERPARAMETERS = {'features_loss': {'weight': 1,
                                        }
                         }
 
+from_file = True
+MODEL_PATH = '/dlsup/utils/vgg.pth'
 
 def initialize_loss():
     """
     Initialize the loss variables
     :return: The VGG model, the activation dictionary, the initialized loss
     """
-    vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1).eval().to(device)
+    if from_file:
+        vgg = vgg16().eval().to(device)
+        vgg.load_state_dict(torch.load(MODEL_PATH))
+    else:
+        from torchvision.models import VGG16_Weights
+        vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1).eval().to(device)
+        torch.save(vgg.state_dict(), '/home/daniel/vgg.pth')
 
     activation_indices = []
     for i, layer in enumerate(vgg.features):
@@ -44,7 +52,6 @@ def initialize_loss():
     return vgg, activation, nn.MSELoss(reduction='sum')
 
 VGG, ACTIVATION, LOSS = initialize_loss()  # initialize the vgg
-
 
 def get_activation(output, label, vgg, activation, j):
     """
@@ -106,7 +113,8 @@ def compute_loss(output, label, hyper_parameters=LOSS_HYPERPARAMETERS):
     loss += hyper_parameters['features_loss']['weight'] * features_loss(features_phi_output,
                                                                         features_phi_label,
                                                                         LOSS)
-    for j in hyper_parameters['style_loss']['j_list']:
+    j_list = hyper_parameters['style_loss']['j_list']
+    for j in j_list:
         style_phi_output, style_phi_label = get_activation(output,
                                                            label,
                                                            VGG,
@@ -153,3 +161,6 @@ def compute_accuracy(prediction, label):
     psnr = psnr.item()
 
     return psnr, ssim
+
+if __name__ == '__main__':
+        print('saved')

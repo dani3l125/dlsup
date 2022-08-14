@@ -10,9 +10,9 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-DIV2K_PATH = '/data'
+DIV2K_PATH = '.'
 DEFAULT_LR = 0.001
-DEFAULT_BS = 1
+DEFAULT_BS = 2
 EPOCHS = 100
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
