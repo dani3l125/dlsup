@@ -98,8 +98,8 @@ def pixel_loss(output, label, loss):
     return loss(output, label) / torch.prod(torch.tensor(output.shape[1:]))
 
 
-def compute_loss(output, label, vgg, activation, hyper_parameters=LOSS_HYPERPARAMETERS):
-    loss = hyper_parameters['pixel_loss']['weight'] * pixel_loss(output, label, LOSS)
+def compute_loss(output, label, vgg, activation, loss, hyper_parameters=LOSS_HYPERPARAMETERS):
+    loss = hyper_parameters['pixel_loss']['weight'] * pixel_loss(output, label, loss)
     features_phi_output, features_phi_label = get_activation(output,
                                                              label,
                                                              vgg,
@@ -107,7 +107,7 @@ def compute_loss(output, label, vgg, activation, hyper_parameters=LOSS_HYPERPARA
                                                              hyper_parameters['features_loss']['j'])
     loss += hyper_parameters['features_loss']['weight'] * features_loss(features_phi_output,
                                                                         features_phi_label,
-                                                                        LOSS)
+                                                                        loss)
     j_list = hyper_parameters['style_loss']['j_list']
     for j in j_list:
         style_phi_output, style_phi_label = get_activation(output,

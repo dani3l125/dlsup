@@ -12,15 +12,10 @@ import matplotlib.pyplot as plt
 import argparse
 import yaml
 
-DIV2K_PATH = '.'
-DEFAULT_LR = 0.001
-DEFAULT_BS = 1
-EPOCHS = 100
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 parser = argparse.ArgumentParser(description='configuration file path')
-parser.add_argument('--cfg', type=str, default= 'cfg.yaml',
+parser.add_argument('--cfg', type=str, default= 'cfg_dlc.yaml',
                     help='path to configuration file')
 
 args = parser.parse_args()
@@ -34,11 +29,12 @@ EPOCHS = cfg['EPOCHS']
 LOSS_HYPERPARAMETERS = cfg['LOSS_HYPERPARAMETERS']
 from_file = cfg['from_file']
 MODEL_PATH = cfg['MODEL_PATH']
+NAME = cfg['NAME']
 
 # plot train and test metric along epochs
 def plot_curve_error(train_mean, train_std, test_mean, test_std, x_label, y_label, title, identity=[]):
     plt.figure(figsize=(10, 8))
-    plt.title(title)
+    plt.title(NAME+title)
 
     alpha = 0.1
 
@@ -225,7 +221,7 @@ def train(model, visualize_data=False):
         ssim_std_val[i] = ssim_test['std']
 
         # loss
-        plot_curve_error(loss_mean_train, loss_std_train, loss_mean_val, loss_std_val, 'epoch', 'losses', 'LOSS')
+        plot_curve_error(loss_mean_train, loss_std_train, loss_mean_val, loss_std_val, 'epoch', 'losses', f'LOSS')
         # accuracy - PSNR
         plot_curve_error(psnr_mean_train, psnr_std_train, psnr_mean_val, psnr_std_val, 'epoch', 'accuracy', 'PSNR')
         # accuracy - SSIM
