@@ -44,19 +44,18 @@ def plot_curve_error(train_mean, train_std, test_mean, test_std, x_label, y_labe
     plt.savefig(f'{title}.png')
 
 def train(model, visualize_data=False):
-
     optimizer = Adam(model.parameters(), lr=DEFAULT_LR)
     lr_scheduler = ReduceLROnPlateau(optimizer)
     transform = transforms.Compose([
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-        #transforms.Resize(1020)
+        # transforms.Resize(1020)
     ])
     target_transform = transforms.Compose([
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-        #transforms.Resize(2040)
+        # transforms.Resize(2040)
     ])
-    train_ds = DIV2KDataset(dir=DIV2K_PATH, transform=transform, target_transform=target_transform)
-    val_ds = DIV2KDataset(dir=DIV2K_PATH, type='valid', transform=transform, target_transform=target_transform)
+    train_ds = [DIV2KDataset(dir=DIV2K_PATH, transform=transform, target_transform=target_transform)[4]]
+    val_ds = [DIV2KDataset(dir=DIV2K_PATH, type='valid', transform=transform, target_transform=target_transform)[4]]
     # test_ds = DIV2KDataset(dir=DIV2K_PATH, type='test', transform=transform, target_transform=target_transform)
 
     train_dl = DataLoader(train_ds, batch_size=DEFAULT_BS, num_workers=4, pin_memory=True)
@@ -157,8 +156,7 @@ def train(model, visualize_data=False):
         ssim_mean_epoch = np.mean(ssim_epoch)
         ssim_std_epoch = np.std(ssim_epoch)
 
-        if epoch_i > 10:
-            lr_scheduler.step(loss.item())
+        lr_scheduler.step(loss.item())
 
         loss = {'mean': loss_mean_epoch, 'std': loss_std_epoch}
         psnr = {'mean': psnr_mean_epoch, 'std': psnr_std_epoch}
@@ -172,7 +170,7 @@ def train(model, visualize_data=False):
         index_data = np.arange(nRow * nCol)  # show only first images
 
         for index_batch, (im, target) in enumerate(train_dl):
-            plot_data_grid(im, index_data, nRow, nCol ,'sample from augmented batch')
+            plot_data_grid(im, index_data, nRow, nCol, 'sample from augmented batch')
             plot_data_grid(target, index_data, nRow, nCol)
 
     # ================================================================================
@@ -206,6 +204,13 @@ def train(model, visualize_data=False):
         psnr_std_val[i] = psnr_test['std']
         ssim_mean_val[i] = ssim_test['mean']
         ssim_std_val[i] = ssim_test['std']
+
+        # loss
+        plot_curve_error(loss_mean_train, loss_std_train, loss_mean_val, loss_std_val, 'epoch', 'losses', 'LOSS')
+        # accuracy - PSNR
+        plot_curve_error(psnr_mean_train, psnr_std_train, psnr_mean_val, psnr_std_val, 'epoch', 'accuracy', 'PSNR')
+        # accuracy - SSIM
+        plot_curve_error(ssim_mean_train, ssim_std_train, ssim_mean_val, ssim_std_val, 'epoch', 'accuracy', 'SSIM')
 
     if visualize_data:
         nRow = 2
@@ -249,19 +254,13 @@ def train(model, visualize_data=False):
         plot_data_grid(blurry_test, index_data, nRow, nCol, title='input images, test')
         plot_data_grid(prediction_test, index_data, nRow, nCol, title='output images, test')
 
-    # loss
-    plot_curve_error(loss_mean_train, loss_std_train, loss_mean_val, loss_std_val, 'epoch', 'losses', 'LOSS')
-    # accuracy - PSNR
-    plot_curve_error(psnr_mean_train, psnr_std_train, psnr_mean_val, psnr_std_val, 'epoch', 'accuracy', 'PSNR')
-    # accuracy - SSIM
-    plot_curve_error(ssim_mean_train, ssim_std_train, ssim_mean_val, ssim_std_val, 'epoch', 'accuracy', 'SSIM')
-
     # notice that the 'train' signals were computed each batch while the test signals are computed at the end of the epoch
     torch.save(model.state_dict(), './model.pth')
 
     (loss_test, psnr_test, ssim_test) = valid_epoch(0, test=True)
     print('Test PSNR: ', psnr_test['mean'])
     print('Test SSIM: ', ssim_test['mean'])
+
 
 
 if __name__ == '__main__':
