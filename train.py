@@ -105,7 +105,7 @@ def train(model, visualize_data=False):
             prediction = model(im)
 
             # loss - modeified according to psnr function
-            loss = compute_loss(prediction, target, VGG, ACTIVATION, LOSS_HYPERPARAMETERS)
+            loss = compute_loss(prediction, target, VGG, ACTIVATION, LOSS, LOSS_HYPERPARAMETERS)
 
             # accuracy
             psnr, ssim = compute_accuracy(prediction, target)
