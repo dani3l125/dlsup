@@ -2,7 +2,7 @@ import torch
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from utils.Data import DIV2KDataset, plot_data_grid
-from utils.metrics import compute_accuracy, compute_loss
+from utils.metrics import compute_accuracy, compute_loss, initialize_loss
 from torchvision import transforms
 from Models import Unet
 from torch.utils.data import DataLoader
@@ -10,6 +10,7 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import argparse
+import yaml
 
 DIV2K_PATH = '.'
 DEFAULT_LR = 0.001
@@ -23,7 +24,16 @@ parser.add_argument('--cfg', type=str, default= 'cfg.yaml',
                     help='path to configuration file')
 
 args = parser.parse_args()
+with open(args.cfg, 'r') as stream:
+    cfg = yaml.safe_load(stream)
 
+DIV2K_PATH = cfg['DIV2K_PATH']
+DEFAULT_LR = cfg['DEFAULT_LR']
+DEFAULT_BS = cfg['DEFAULT_BS']
+EPOCHS = cfg['EPOCHS']
+LOSS_HYPERPARAMETERS = cfg['LOSS_HYPERPARAMETERS']
+from_file = cfg['from_file']
+MODEL_PATH = cfg['MODEL_PATH']
 
 # plot train and test metric along epochs
 def plot_curve_error(train_mean, train_std, test_mean, test_std, x_label, y_label, title, identity=[]):
@@ -51,6 +61,8 @@ def plot_curve_error(train_mean, train_std, test_mean, test_std, x_label, y_labe
     plt.savefig(f'{title}.png')
 
 def train(model, visualize_data=False):
+    VGG, ACTIVATION, LOSS = initialize_loss(from_file, MODEL_PATH)
+
     optimizer = Adam(model.parameters(), lr=DEFAULT_LR)
     lr_scheduler = ReduceLROnPlateau(optimizer)
     transform = transforms.Compose([
@@ -97,7 +109,7 @@ def train(model, visualize_data=False):
             prediction = model(im)
 
             # loss - modeified according to psnr function
-            loss = compute_loss(prediction, target)
+            loss = compute_loss(prediction, target, VGG, ACTIVATION, LOSS_HYPERPARAMETERS)
 
             # accuracy
             psnr, ssim = compute_accuracy(prediction, target)
@@ -142,7 +154,7 @@ def train(model, visualize_data=False):
             prediction = model(im)
 
             # loss - modeified according to psnr function
-            loss = compute_loss(prediction, target)
+            loss = compute_loss(prediction, target, VGG, ACTIVATION, LOSS_HYPERPARAMETERS)
 
             # accuracy
             psnr, ssim = compute_accuracy(prediction, target)

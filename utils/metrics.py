@@ -17,17 +17,14 @@ LOSS_HYPERPARAMETERS = {'features_loss': {'weight': 1,
                                        }
                         }
 
-from_file = True
-MODEL_PATH = '/dlsup/utils/vgg.pth'
-
-def initialize_loss():
+def initialize_loss(from_file, model_path):
     """
     Initialize the loss variables
     :return: The VGG model, the activation dictionary, the initialized loss
     """
     if from_file:
         vgg = vgg16().eval().to(device)
-        vgg.load_state_dict(torch.load(MODEL_PATH))
+        vgg.load_state_dict(torch.load(model_path))
     else:
         from torchvision.models import VGG16_Weights
         vgg = vgg16(weights=VGG16_Weights.IMAGENET1K_V1).eval().to(device)
@@ -50,8 +47,6 @@ def initialize_loss():
         vgg.features[activation_indices[i]].register_forward_hook(get_hook_activation(i))
 
     return vgg, activation, nn.MSELoss(reduction='sum')
-
-VGG, ACTIVATION, LOSS = initialize_loss()  # initialize the vgg
 
 def get_activation(output, label, vgg, activation, j):
     """
@@ -103,12 +98,12 @@ def pixel_loss(output, label, loss):
     return loss(output, label) / torch.prod(torch.tensor(output.shape[1:]))
 
 
-def compute_loss(output, label, hyper_parameters=LOSS_HYPERPARAMETERS):
+def compute_loss(output, label, vgg, activation, hyper_parameters=LOSS_HYPERPARAMETERS):
     loss = hyper_parameters['pixel_loss']['weight'] * pixel_loss(output, label, LOSS)
     features_phi_output, features_phi_label = get_activation(output,
                                                              label,
-                                                             VGG,
-                                                             ACTIVATION,
+                                                             vgg,
+                                                             activation,
                                                              hyper_parameters['features_loss']['j'])
     loss += hyper_parameters['features_loss']['weight'] * features_loss(features_phi_output,
                                                                         features_phi_label,
@@ -117,8 +112,8 @@ def compute_loss(output, label, hyper_parameters=LOSS_HYPERPARAMETERS):
     for j in j_list:
         style_phi_output, style_phi_label = get_activation(output,
                                                            label,
-                                                           VGG,
-                                                           ACTIVATION,
+                                                           vgg,
+                                                           activation,
                                                            j)
         loss += hyper_parameters['style_loss']['weight'] / len(hyper_parameters['style_loss']['j_list']) * style_loss(
             style_phi_output,
