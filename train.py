@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import argparse
 
 DIV2K_PATH = '.'
 DEFAULT_LR = 0.001
@@ -16,6 +17,12 @@ DEFAULT_BS = 1
 EPOCHS = 100
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+parser = argparse.ArgumentParser(description='configuration file path')
+parser.add_argument('--cfg', type=str, default= 'cfg.yaml',
+                    help='path to configuration file')
+
+args = parser.parse_args()
 
 
 # plot train and test metric along epochs
@@ -54,8 +61,8 @@ def train(model, visualize_data=False):
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         # transforms.Resize(2040)
     ])
-    train_ds = [DIV2KDataset(dir=DIV2K_PATH, transform=transform, target_transform=target_transform)[4]]
-    val_ds = [DIV2KDataset(dir=DIV2K_PATH, type='valid', transform=transform, target_transform=target_transform)[4]]
+    train_ds = DIV2KDataset(dir=DIV2K_PATH, transform=transform, target_transform=target_transform)
+    val_ds = DIV2KDataset(dir=DIV2K_PATH, type='valid', transform=transform, target_transform=target_transform)
     # test_ds = DIV2KDataset(dir=DIV2K_PATH, type='test', transform=transform, target_transform=target_transform)
 
     train_dl = DataLoader(train_ds, batch_size=DEFAULT_BS, num_workers=4, pin_memory=True)
