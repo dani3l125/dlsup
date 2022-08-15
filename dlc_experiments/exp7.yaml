@@ -12,7 +12,7 @@ LOSS_HYPERPARAMETERS:
     j: 12
   pixel_loss:
     weight: 4
-  style_loss':
-    weight': 1
-    j_list: [4, 8, 12]
+  style_loss:
+    weight: 1
+    j_list: [ 4, 8, 12 ]
 

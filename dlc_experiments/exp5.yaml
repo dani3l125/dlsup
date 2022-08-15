@@ -12,6 +12,6 @@ LOSS_HYPERPARAMETERS:
     j: 2
   pixel_loss:
     weight: 1
-  style_loss':
-    weight': 0.1
-    j_list: [1, ,2 ,3 ,4, 5, 6, 7, 8, 9, 10, 11, 12]
+  style_loss:
+    weight: 0.1
+    j_list: [ 1, 2 ,3 ,4, 5, 6, 7, 8, 9, 10, 11, 12 ]
