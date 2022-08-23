@@ -6,6 +6,7 @@ import torch.nn as nn
 from torchvision.models import vgg16
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+loss_fn = nn.MSELoss(reduction='sum')
 
 LOSS_HYPERPARAMETERS = {'features_loss': {'weight': 1,
                                           'j': 10
@@ -46,7 +47,7 @@ def initialize_loss(from_file, model_path):
     for i in range(len(activation_indices)):
         vgg.features[activation_indices[i]].register_forward_hook(get_hook_activation(i))
 
-    return vgg, activation, nn.MSELoss(reduction='sum')
+    return vgg, activation
 
 def get_activation(output, label, vgg, activation, j):
     """
@@ -64,17 +65,17 @@ def get_activation(output, label, vgg, activation, j):
     return phi_output, phi_label
 
 
-def features_loss(phi_output, phi_label, loss):
+def features_loss(phi_output, phi_label):
     """
     :param phi_output: The outputs of the j-th layer of the VGG with the output of the network as the input
     :param phi_label: The outputs of the j-th layer of the VGG with the target image as the input
     :param loss: The initialized loss
     :return: The feature loss with respect to the j-th layer of hte VGG
     """
-    return loss(phi_output, phi_label) / torch.prod(torch.tensor(phi_output.shape[1:]))
+    return loss_fn(phi_output, phi_label) / torch.prod(torch.tensor(phi_output.shape[1:]))
 
 
-def style_loss(phi_output, phi_label, loss):
+def style_loss(phi_output, phi_label):
     """
     :param phi_output: The outputs of the j-th layer of the VGG with the output of the network as the input
     :param phi_label: The outputs of the j-th layer of the VGG with the target image as the input
@@ -85,29 +86,32 @@ def style_loss(phi_output, phi_label, loss):
     psi_label = phi_label.reshape((phi_label.shape[0], phi_label.shape[1], -1))
     g_output = torch.einsum('bik,bjk->bij', psi_output, psi_output) / torch.prod(torch.tensor(phi_output.shape[1:]))
     g_label = torch.einsum('bik,bjk->bij', psi_label, psi_label) / torch.prod(torch.tensor(phi_label.shape[1:]))
-    return loss(g_output, g_label)
+    return loss_fn(g_output, g_label)
 
 
-def pixel_loss(output, label, loss):
+def pixel_loss(output, label):
     """
     :param output: The output of the network
     :param label: The target image
     :param loss: The initialized loss
     :return: The pixel wise loss between the images
     """
-    return loss(output, label) / torch.prod(torch.tensor(output.shape[1:]))
+    return loss_fn(output, label) / torch.prod(torch.tensor(output.shape[1:]))
 
 
-def compute_loss(output, label, vgg, activation, loss_fn, hyper_parameters=LOSS_HYPERPARAMETERS):
-    loss = hyper_parameters['pixel_loss']['weight'] * pixel_loss(output, label, loss_fn)
+def compute_loss(output, label, vgg, activation, hyper_parameters=LOSS_HYPERPARAMETERS):
+    return loss_fn(output, label)
+    losses = []
+
+    losses.append(hyper_parameters['pixel_loss']['weight'] * pixel_loss(output, label))
     features_phi_output, features_phi_label = get_activation(output,
                                                              label,
                                                              vgg,
                                                              activation,
                                                              hyper_parameters['features_loss']['j'])
-    loss += hyper_parameters['features_loss']['weight'] * features_loss(features_phi_output,
+    losses.append(hyper_parameters['features_loss']['weight'] * features_loss(features_phi_output,
                                                                         features_phi_label,
-                                                                        loss_fn)
+                                                                        ))
     j_list = hyper_parameters['style_loss']['j_list']
     for j in j_list:
         style_phi_output, style_phi_label = get_activation(output,
@@ -115,11 +119,11 @@ def compute_loss(output, label, vgg, activation, loss_fn, hyper_parameters=LOSS_
                                                            vgg,
                                                            activation,
                                                            j)
-        loss += hyper_parameters['style_loss']['weight'] / len(hyper_parameters['style_loss']['j_list']) * style_loss(
+        losses.append(hyper_parameters['style_loss']['weight'] / len(hyper_parameters['style_loss']['j_list']) * style_loss(
             style_phi_output,
             style_phi_output,
-            loss_fn)
-    return loss
+            ))
+    return torch.stack(losses, dim=0).sum(dim=0)
 
 
 def compute_accuracy(prediction, label):

@@ -57,7 +57,7 @@ def plot_curve_error(train_mean, train_std, test_mean, test_std, x_label, y_labe
     plt.savefig(f'{title}.png')
 
 def train(model, visualize_data=False):
-    VGG, ACTIVATION, LOSS = initialize_loss(from_file, MODEL_PATH)
+    VGG, ACTIVATION = initialize_loss(from_file, MODEL_PATH)
 
     optimizer = Adam(model.parameters(), lr=DEFAULT_LR)
     lr_scheduler = ReduceLROnPlateau(optimizer)
@@ -105,7 +105,7 @@ def train(model, visualize_data=False):
             prediction = model(im)
 
             # loss - modeified according to psnr function
-            loss = compute_loss(prediction, target, VGG, ACTIVATION, LOSS, LOSS_HYPERPARAMETERS)
+            loss = compute_loss(prediction, target, VGG, ACTIVATION, LOSS_HYPERPARAMETERS)
 
             # accuracy
             psnr, ssim = compute_accuracy(prediction, target)
@@ -150,7 +150,7 @@ def train(model, visualize_data=False):
             prediction = model(im)
 
             # loss - modeified according to psnr function
-            loss = compute_loss(prediction, target, VGG, ACTIVATION, LOSS, LOSS_HYPERPARAMETERS)
+            loss = compute_loss(prediction, target, VGG, ACTIVATION, LOSS_HYPERPARAMETERS)
 
             # accuracy
             psnr, ssim = compute_accuracy(prediction, target)
