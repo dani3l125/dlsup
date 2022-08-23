@@ -171,7 +171,7 @@ def train(model, visualize_data=False):
         ssim_mean_epoch = np.mean(ssim_epoch)
         ssim_std_epoch = np.std(ssim_epoch)
 
-        lr_scheduler.step(loss.item())
+        # lr_scheduler.step(loss.item())
 
         loss = {'mean': loss_mean_epoch, 'std': loss_std_epoch}
         psnr = {'mean': psnr_mean_epoch, 'std': psnr_std_epoch}
