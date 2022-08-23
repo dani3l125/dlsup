@@ -279,5 +279,6 @@ def train(model, visualize_data=False):
 
 
 if __name__ == '__main__':
+    print(f'Name = {NAME}')
     model = Unet().to(device)
     train(model)
