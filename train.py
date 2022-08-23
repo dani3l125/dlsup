@@ -34,7 +34,7 @@ NAME = cfg['NAME']
 # plot train and test metric along epochs
 def plot_curve_error(train_mean, train_std, test_mean, test_std, x_label, y_label, title, identity=[]):
     plt.figure(figsize=(10, 8))
-    plt.title(NAME+title)
+    plt.title(f'{NAME}_{title}')
 
     alpha = 0.1
 
@@ -54,7 +54,7 @@ def plot_curve_error(train_mean, train_std, test_mean, test_std, x_label, y_labe
     plt.legend()
 
     plt.tight_layout()
-    plt.savefig(f'{title}.png')
+    plt.savefig(f'{NAME}_{title}.png')
 
 def train(model, visualize_data=False):
     VGG, ACTIVATION = initialize_loss(from_file, MODEL_PATH)
@@ -279,6 +279,5 @@ def train(model, visualize_data=False):
 
 
 if __name__ == '__main__':
-    print(f'Name = {NAME}')
     model = Unet().to(device)
     train(model)
