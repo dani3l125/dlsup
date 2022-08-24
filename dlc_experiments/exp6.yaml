@@ -1,15 +1,18 @@
+DIV2K_PATH: '.'
+DEFAULT_LR: 0.01
+DEFAULT_BS: 2
 EPOCHS: 100
 from_file: 1
 MODEL_PATH: '/dlsup/utils/vgg.pth'
-NAME: 'exp6'
+NAME: 'exp1'
 
 LOSS_HYPERPARAMETERS:
   features_loss:
-    weight: 1
-    j: 5
+    weight: 0.4
+    j: 12
   pixel_loss:
-    weight: 0
+    weight: 1
   style_loss:
-    weight: 0
-    j_list: [4, 8, 12]
+    weight: 1
+    j_list: [4, 8, 10, 12]
 

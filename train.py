@@ -270,7 +270,7 @@ def train(model, visualize_data=False):
         plot_data_grid(prediction_test, index_data, nRow, nCol, title='output images, test')
 
     # notice that the 'train' signals were computed each batch while the test signals are computed at the end of the epoch
-    torch.save(model.state_dict(), './model.pth')
+    torch.save(model.state_dict(), f'./model_{NAME}.pth')
 
     (loss_test, psnr_test, ssim_test) = valid_epoch(0, test=True)
     print('Test PSNR: ', psnr_test['mean'])
