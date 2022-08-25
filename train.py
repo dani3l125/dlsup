@@ -91,6 +91,8 @@ def train(model, visualize_data=False):
     ssim_mean_val = np.zeros(EPOCHS)
     ssim_std_val = np.zeros(EPOCHS)
 
+    best_val_loss = np.inf
+
     def train_epoch():
         loss_epoch = []
         psnr_epoch = []
@@ -213,6 +215,12 @@ def train(model, visualize_data=False):
         (loss_test, psnr_test, ssim_test) = valid_epoch(i)
         print(f'Validation Epoch: {i} | Loss: {loss_test} | PSNR: {psnr_test} | SSIM: {ssim_test}')
 
+        torch.save(model.state_dict(), f'./{NAME}_last.pth')
+        if loss_test < best_val_loss:
+            best_val_loss = loss_test
+            torch.save(model.state_dict(), f'./{NAME}_best.pth')
+
+
         loss_mean_val[i] = loss_test['mean']
         loss_std_val[i] = loss_test['std']
         psnr_mean_val[i] = psnr_test['mean']
@@ -268,9 +276,6 @@ def train(model, visualize_data=False):
         plot_data_grid(originals_test, index_data, nRow, nCol, title='original size images, test')
         plot_data_grid(blurry_test, index_data, nRow, nCol, title='input images, test')
         plot_data_grid(prediction_test, index_data, nRow, nCol, title='output images, test')
-
-    # notice that the 'train' signals were computed each batch while the test signals are computed at the end of the epoch
-    torch.save(model.state_dict(), f'./model_{NAME}.pth')
 
     (loss_test, psnr_test, ssim_test) = valid_epoch(0, test=True)
     print('Test PSNR: ', psnr_test['mean'])

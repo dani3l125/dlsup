@@ -3,11 +3,13 @@ import torch
 from torchvision.io import read_image
 from torch.utils.data import Dataset
 import matplotlib.pyplot as plt
+import numpy as np
 
 is_debug = True
 
+
 class DIV2KDataset(Dataset):
-    def __init__(self, dir='.', type='train' , transform=None, target_transform=None, is_debug=False):
+    def __init__(self, dir='.', type='train', transform=None, target_transform=None, is_debug=False):
         self.is_debug = is_debug
         if self.is_debug:
             self.image = torch.randn(3, 224, 224)
@@ -19,7 +21,8 @@ class DIV2KDataset(Dataset):
         self.target_transform = target_transform
 
     def __len__(self):
-        return len([name for name in os.listdir(self.target_dir) if os.path.isfile(os.path.join(self.target_dir, name))])
+        return len(
+            [name for name in os.listdir(self.target_dir) if os.path.isfile(os.path.join(self.target_dir, name))])
 
     def __getitem__(self, idx):
         if self.is_debug:
@@ -54,18 +57,29 @@ def plot_data_grid(data, index_data, nRow, nCol, title=''):
         for j in range(nCol):
             index = index_data[j]
 
-            axes[j].imshow(data[index], cmap='gray', vmin=0, vmax=1)
-            axes[j].xaxis.set_visible(False)
-            axes[j].yaxis.set_visible(False)
+            im = np.zeros((data.shape[-2], data.shape[-1], 3))
+            im[:, :, 0] = data[index, 0, :, :]
+            im[:, :, 1] = data[index, 1, :, :]
+            im[:, :, 2] = data[index, 2, :, :]
+            axes.imshow(im, vmin=0, vmax=1)
+            axes.xaxis.set_visible(False)
+            axes.yaxis.set_visible(False)
     else:
         for i in range(nRow):
             for j in range(nCol):
                 k = i * nCol + j
                 index = index_data[k]
-
-                axes[i, j].imshow(data[index], cmap='gray', vmin=0, vmax=1)
+                im = np.zeros((data.shape[-2], data.shape[-1], 3))
+                im[:, :, 0] = data[index, 0, :, :]
+                im[:, :, 1] = data[index, 1, :, :]
+                im[:, :, 2] = data[index, 2, :, :]
+                axes[i, j].imshow(im, vmin=0, vmax=1)
                 axes[i, j].xaxis.set_visible(False)
                 axes[i, j].yaxis.set_visible(False)
 
     plt.title(title)
     plt.show()
+
+
+def plot_data():
+    pass
