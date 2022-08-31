@@ -66,7 +66,7 @@ def train(model, visualize_data=False):
         # transforms.Resize(1020)
     ])
     target_transform = transforms.Compose([
-        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+        # transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         # transforms.Resize(2040)
     ])
     train_ds = DIV2KDataset(dir=DIV2K_PATH, transform=transform, target_transform=target_transform)

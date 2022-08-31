@@ -91,12 +91,17 @@ NAME = cfg['NAME']
 
 def inference(model):
     transform = transforms.Compose([
-        # transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         # transforms.Resize(1020)
     ])
     target_transform = transforms.Compose([
-        # transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         # transforms.Resize(2040)
+    ])
+
+    reverse_transform = transforms.Compose([
+        transforms.Normalize((-0.485, -0.456, -0.406), (1/0.229, 1/0.224, 1/0.225)),
+        # transforms.Resize(1020)
     ])
     train_ds = DIV2KDataset(dir=DIV2K_PATH, transform=transform, target_transform=target_transform)
     val_ds = DIV2KDataset(dir=DIV2K_PATH, type='valid', transform=transform, target_transform=target_transform)
@@ -104,19 +109,39 @@ def inference(model):
     train_dl = DataLoader(train_ds, batch_size=1, num_workers=4, pin_memory=True)
     val_dl = DataLoader(val_ds, batch_size=1, num_workers=4, pin_memory=True)
 
-    for image, label in train_dl:
+    transform = transforms.Compose([
+        #transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+        # transforms.Resize(1020)
+    ])
+    target_transform = transforms.Compose([
+        #transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+        # transforms.Resize(2040)
+    ])
+    train_ds_plot = DIV2KDataset(dir=DIV2K_PATH, transform=transform, target_transform=target_transform)
+    val_ds_plot = DIV2KDataset(dir=DIV2K_PATH, type='valid', transform=transform, target_transform=target_transform)
+
+    train_dl_plot = DataLoader(train_ds_plot, batch_size=1, num_workers=4, pin_memory=True)
+    val_dl_plot = DataLoader(val_ds_plot, batch_size=1, num_workers=4, pin_memory=True)
+
+    for (image, label),(image_plot, label_plot) in zip(train_dl,train_dl_plot):
         fig, ax = plt.subplots(1, 3)
         im = np.zeros((image.shape[-2], image.shape[-1], image.shape[-3]))
-        im[:, :, 0] = image[0, 0, :, :]
-        im[:, :, 1] = image[0, 1, :, :]
-        im[:, :, 2] = image[0, 2, :, :]
+        im[:, :, 0] = image_plot[0, 0, :, :]
+        im[:, :, 1] = image_plot[0, 1, :, :]
+        im[:, :, 2] = image_plot[0, 2, :, :]
         im = im / 255
+        # im -= im.min()
+        # im /= im.max()
+
         ax[0].imshow(im, vmin=0, vmax=1)
         im = np.zeros((label.shape[-2], label.shape[-1], label.shape[-3]))
-        im[:, :, 0] = label[0, 0, :, :]
-        im[:, :, 1] = label[0, 1, :, :]
-        im[:, :, 2] = label[0, 2, :, :]
+        im[:, :, 0] = label_plot[0, 0, :, :]
+        im[:, :, 1] = label_plot[0, 1, :, :]
+        im[:, :, 2] = label_plot[0, 2, :, :]
         im = im / 255
+        # im -= im.min()
+        # im /= im.max()
+
         ax[1].imshow(im, vmin=0, vmax=1)
         output = model(image.to(device)).to('cpu').detach().numpy()
         im = np.zeros((output.shape[-2], output.shape[-1], output.shape[-3]))
