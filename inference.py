@@ -132,5 +132,5 @@ def inference(model):
 if __name__ == '__main__':
     model = Unet().to(device)
     model.eval()
-    model.load_state_dict(torch.load(f'./model.pth'))
+    model.load_state_dict(torch.load(f'./model_exp1.pth'))
     inference(model)

@@ -91,7 +91,7 @@ def train(model, visualize_data=False):
     ssim_mean_val = np.zeros(EPOCHS)
     ssim_std_val = np.zeros(EPOCHS)
 
-    best_val_loss = np.inf
+    best_val_loss = float('inf')
 
     def train_epoch():
         loss_epoch = []
