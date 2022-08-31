@@ -216,7 +216,7 @@ def train(model, visualize_data=False):
         print(f'Validation Epoch: {i} | Loss: {loss_test} | PSNR: {psnr_test} | SSIM: {ssim_test}')
 
         torch.save(model.state_dict(), f'./{NAME}_last.pth')
-        if loss_test < best_val_loss:
+        if loss_test['mean'] < best_val_loss:
             best_val_loss = loss_test
             torch.save(model.state_dict(), f'./{NAME}_best.pth')
 
