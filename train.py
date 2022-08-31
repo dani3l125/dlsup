@@ -217,7 +217,7 @@ def train(model, visualize_data=False):
 
         torch.save(model.state_dict(), f'./{NAME}_last.pth')
         if loss_test['mean'] < best_val_loss:
-            best_val_loss = loss_test
+            best_val_loss = loss_test['mean']
             torch.save(model.state_dict(), f'./{NAME}_best.pth')
 
 
