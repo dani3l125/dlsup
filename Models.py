@@ -178,7 +178,7 @@ class Unet(nn.Module):
     def forward(self, *input):
 
         """ Forward propagation in U-Net. """
-        res_key = f'{input[0].shape[1]}x{input[0].shape[2]}'
+        res_key = f'{input[0].shape[2]}x{input[0].shape[3]}'
 
         x, features = self.forward_backbone(*input)
 
