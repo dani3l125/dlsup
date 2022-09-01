@@ -100,7 +100,6 @@ def pixel_loss(output, label):
 
 
 def compute_loss(output, label, vgg, activation, hyper_parameters=LOSS_HYPERPARAMETERS):
-    return loss_fn(output, label)
     losses = []
 
     losses.append(hyper_parameters['pixel_loss']['weight'] * pixel_loss(output, label))

@@ -12,7 +12,7 @@ import cv2
 import onnx
 import onnxruntime as ort
 
-device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 parser = argparse.ArgumentParser(description='configuration file path')
 parser.add_argument('--cfg', type=str, default='cfg_ferrum.yaml',
@@ -131,6 +131,6 @@ def save_video():
 if __name__ == '__main__':
     model = Unet().to(device)
     model.eval()
-    model.load_state_dict(torch.load(f'./model_exp1.pth'))
+    model.load_state_dict(torch.load(f'./exp1_last.pth'))
     video_inference(model)
     save_video()
