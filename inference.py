@@ -12,8 +12,8 @@ import cv2
 import onnx
 import onnxruntime as ort
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
+# device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = 'cpu'
 parser = argparse.ArgumentParser(description='configuration file path')
 parser.add_argument('--cfg', type=str, default='cfg_ferrum.yaml',
                     help='path to configuration file')
@@ -60,7 +60,7 @@ def inference(model, data='val'):
     ds_plot = DIV2KDataset(dir=DIV2K_PATH) if data == 'train' else\
         DIV2KDataset(dir=DIV2K_PATH, type='valid',)
 
-    dl_plot = DataLoader(ds, batch_size=1, num_workers=4, pin_memory=True)
+    dl_plot = DataLoader(ds_plot, batch_size=1, num_workers=4, pin_memory=True)
 
     for (image, label),(image_plot, label_plot) in zip(dl,dl_plot):
         fig, ax = plt.subplots(1, 3)
@@ -92,8 +92,10 @@ def video_inference(model, path='/home/daniel/dlsup/sample.mp4'):
     onnx_model = onnx.load("dlsup.onnx")
     onnx.checker.check_model(onnx_model)
 
-    ort_sess = ort.InferenceSession('dlsup.onnx',
-                                    providers=['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider'])
+    # ort_sess = ort.InferenceSession('dlsup.onnx',
+    #                                 providers=['TensorrtExecutionProvider', 'CUDAExecutionProvider', 'CPUExecutionProvider'])
+
+    ort_sess = ort.InferenceSession('dlsup.onnx', providers=['TensorrtExecutionProvider', 'CPUExecutionProvider'])
 
     count = 0
     while success:
@@ -131,6 +133,6 @@ def save_video():
 if __name__ == '__main__':
     model = Unet().to(device)
     model.eval()
-    model.load_state_dict(torch.load(f'./exp1_last.pth'))
-    video_inference(model)
+    model.load_state_dict(torch.load(f'./exp3_best.pth', map_location=torch.device(device)))
+    inference(model, data ='train')
     save_video()
