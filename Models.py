@@ -162,7 +162,7 @@ class Unet(nn.Module):
                                                       parametric=parametric_upsampling,
                                                       use_bn=decoder_use_batchnorm)
 
-        self.final_activaation = nn.LogSigmoid()
+        self.final_activation = nn.LogSigmoid()
 
         self.final_conv = nn.Conv2d(3, 3, kernel_size=(1, 1))
 
