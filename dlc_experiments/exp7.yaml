@@ -1,10 +1,10 @@
 DIV2K_PATH: '.'
 DEFAULT_LR: 0.01
-DEFAULT_BS: 2
+DEFAULT_BS: 1
 EPOCHS: 100
 from_file: 1
 MODEL_PATH: '/dlsup/utils/vgg.pth'
-NAME: 'exp1'
+NAME: 'exp7'
 
 LOSS_HYPERPARAMETERS:
   features_loss:

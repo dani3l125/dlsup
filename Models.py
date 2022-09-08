@@ -161,6 +161,9 @@ class Unet(nn.Module):
                                                       skip_in=0,
                                                       parametric=parametric_upsampling,
                                                       use_bn=decoder_use_batchnorm)
+
+        self.final_activation = nn.LogSigmoid()
+
         self.final_conv = nn.Conv2d(3, 3, kernel_size=(1, 1))
 
         if encoder_freeze:
@@ -192,6 +195,7 @@ class Unet(nn.Module):
                 x = upsample_block(x, skip_features)
 
         x = self.final_upsample(x)
+        x= self.final_activation(x)
         x = self.final_conv(x)
 
         # if self.training:
