@@ -11,6 +11,7 @@ import glob
 import cv2
 import onnx
 import onnxruntime as ort
+import time
 
 device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 
@@ -101,9 +102,12 @@ def video_inference(model, path='/home/daniel/dlsup/sample.mp4'):
                                                'CPUExecutionProvider'])
 
     count = 0
-    while success and count < 10:
+    avg_time = 0
+    while success and count < 100:
         fig, ax = plt.subplots(1, 2)
+        start = time.time()
         output = ort_sess.run(None, {'input': transform(torch.tensor(image).to('cpu')).numpy()})[0]
+        avg_time = (avg_time*count + (time.time()-start))/(count+1)
         output_im = plot_prepare(output)
         # cv2.imshow('Output', output_im)
         ax[0].imshow(im, vmin=0, vmax=1)
@@ -117,6 +121,8 @@ def video_inference(model, path='/home/daniel/dlsup/sample.mp4'):
         image = inference_prepare(image).astype(np.float32)
         im = plot_prepare(image)
         count += 1
+
+    print(f'Avarage inferece time: {avg_time}')
 
 
 def save_video():
@@ -141,6 +147,6 @@ def save_video():
 if __name__ == '__main__':
     model = Unet().to(device)
     model.eval()
-    model.load_state_dict(torch.load(f'/home/daniel/exp1_last.pth'))
+    model.load_state_dict(torch.load(f'/home/daniel/dlsup/best.pth'))
     video_inference(model)
     save_video()

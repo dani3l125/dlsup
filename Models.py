@@ -195,7 +195,7 @@ class Unet(nn.Module):
                 x = upsample_block(x, skip_features)
 
         x = self.final_upsample(x)
-        x= self.final_activation(x)
+        # x = self.final_activation(x)
         x = self.final_conv(x)
 
         # if self.training:
